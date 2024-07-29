@@ -1,36 +1,14 @@
-// Load environment variables
-require('dotenv').config();
-
-// Import required modules
-const express = require('express');
 const mongoose = require('mongoose');
+const Article = require("../models/ArticleModel");
 const multer = require('multer');
 const { GridFsStorage } = require('multer-gridfs-storage');
-const Grid = require('gridfs-stream');
-const Article = require("../models/ArticleModel");
-
-// Initialize Express app
-const app = express();
-
-// MongoDB URI
-const mongoURI = process.env.MONGO_URI;
-
-// Create mongo connection
-const conn = mongoose.createConnection(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-// Initialize GridFS
-let gfs;
-conn.once('open', () => {
-  gfs = Grid(conn.db, mongoose.mongo);
-  gfs.collection('uploads');
-});
+const { GridFSBucket } = require('mongodb');
+const dotenv = require("dotenv");
+dotenv.config();
 
 // Create storage engine
 const storage = new GridFsStorage({
-  url: mongoURI,
+  url: process.env.MONGO_URI,
   file: (req, file) => {
     return {
       bucketName: 'uploads',
@@ -39,7 +17,7 @@ const storage = new GridFsStorage({
   }
 });
 
-const upload = multer({ storage }).single('image');
+const upload = multer({ storage, limits: { fileSize: 1 * 1024 * 1024 } }).single('image');
 
 // Create Article Endpoint
 exports.createArticle = async (req, res) => {
@@ -48,7 +26,12 @@ exports.createArticle = async (req, res) => {
       return res.status(500).json({ error: err.message });
     }
 
-    const { title, paragraphs, writer, links, desa, status } = req.body;
+    // Check the file size
+    if (req.file.size > 1 * 1024 * 1024) { // 1MB limit
+      return res.status(400).json({ error: 'File size is too large. Maximum limit is 1MB.' });
+    }
+
+    const { title, paragraphs, writer, links, desa } = req.body;
     const image = req.file.id; // Store the file ID in the image field
 
     const newArticle = new Article({
@@ -70,6 +53,7 @@ exports.createArticle = async (req, res) => {
   });
 };
 
+
 // Delete Article Endpoint
 exports.deleteArticle = async (req, res) => {
   const { id } = req.params;
@@ -79,27 +63,81 @@ exports.deleteArticle = async (req, res) => {
     if (!article) {
       return res.status(404).json({ message: "Article not found" });
     }
+
+    const imageId = article.image;
     await Article.findByIdAndDelete(id);
-    return res.status(200).json({ message: "Article deleted successfully" });
+
+    const db = mongoose.connection.db;
+    const gfsBucket = new GridFSBucket(db, {
+      bucketName: 'uploads'
+    });
+
+    // Delete the associated image from GridFS
+    gfsBucket.delete(new mongoose.Types.ObjectId(imageId), (err) => {
+      if (err) {
+        return res.status(500).json({ message: "Error deleting image", error: err.message });
+      }
+      return res.status(200).json({ message: "Article and image deleted successfully" });
+    });
+
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 };
 
-// Verift Article Endpoint
+// Verify Article Endpoint
 exports.verifyArticle = async (req, res) => {
   const { id } = req.params;
   const article = await Article.findById(id);
-  if (article.status == "Verified") {
-    return res.json({ message: "Article is already verified" });
-  }
-  article.status = "Verified";
-  article.save();
   if (!article) {
     return res.status(404).json({ message: "Article not found" });
   }
+  if (article.status === "Verified") {
+    return res.json({ message: "Article is already verified" });
+  }
+  article.status = "Verified";
+  await article.save();
   return res.json({
     message: "Article verified successfully",
     article
   });
-}
+};
+
+// Get Article Endpoint
+exports.getArticle = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Fetch the article by ID
+    const article = await Article.findById(id);
+
+    if (!article) {
+      return res.status(404).json({ message: "Article not found" });
+    }
+
+    return res.status(200).json(article);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+// Get Image Endpoint
+exports.getImage = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const db = mongoose.connection.db;
+    const gfsBucket = new GridFSBucket(db, {
+      bucketName: 'uploads'
+    });
+    const readStream = gfsBucket.openDownloadStream(new mongoose.Types.ObjectId(id));
+
+    readStream.on('error', (err) => {
+      return res.status(500).json({ message: "Error retrieving image", error: err.message });
+    });
+
+    readStream.pipe(res);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
