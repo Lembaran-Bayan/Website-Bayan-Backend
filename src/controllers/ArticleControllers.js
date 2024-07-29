@@ -41,7 +41,7 @@ const storage = new GridFsStorage({
 
 const upload = multer({ storage }).single('image'); // Specify 'image' as the field name
 
-// Article creation handler
+// Create Article Endpoint
 exports.createArticle = (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
@@ -69,3 +69,21 @@ exports.createArticle = (req, res) => {
     }
   });
 };
+
+// Delete Article Endpoint
+exports.deleteArticle = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const article = await Article.findById(id);
+    if (!article) {
+      return res.status(404).json({ message: "Article not found" });
+    }
+    await Article.findByIdAndDelete(id);
+    return res.status(200).json({ message: "Article deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+
