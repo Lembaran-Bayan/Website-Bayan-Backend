@@ -39,10 +39,10 @@ const storage = new GridFsStorage({
   }
 });
 
-const upload = multer({ storage }).single('image'); // Specify 'image' as the field name
+const upload = multer({ storage }).single('image');
 
 // Create Article Endpoint
-exports.createArticle = (req, res) => {
+exports.createArticle = async (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
       return res.status(500).json({ error: err.message });
@@ -86,4 +86,20 @@ exports.deleteArticle = async (req, res) => {
   }
 };
 
-
+// Verift Article Endpoint
+exports.verifyArticle = async (req, res) => {
+  const { id } = req.params;
+  const article = await Article.findById(id);
+  if (article.status == "Verified") {
+    return res.json({ message: "Article is already verified" });
+  }
+  article.status = "Verified";
+  article.save();
+  if (!article) {
+    return res.status(404).json({ message: "Article not found" });
+  }
+  return res.json({
+    message: "Article verified successfully",
+    article
+  });
+}
