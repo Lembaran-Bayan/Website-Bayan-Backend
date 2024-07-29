@@ -95,6 +95,24 @@ app.get("/", (req, res) => {
     `);
 });
 
+// NO ROUTE FOUND
+app.use((req, res, next) => {
+  const err = new Error('No route found on the server');
+  err.status = 404;
+  next(err);
+});
+
+// ERROR HANDLER
+app.use((err, req, res, next) => {
+  res.status(err.status || 500);
+  return res.json({
+    error: {
+      message: err.message,
+      status: err.status
+    }
+  });
+});
+
 // APP START
 app.listen(5000, () => {
   console.log("Server is running on http://localhost:5000");
