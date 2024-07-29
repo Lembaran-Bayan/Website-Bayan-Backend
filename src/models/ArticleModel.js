@@ -2,14 +2,6 @@ const mongoose = require("mongoose");
 
 const articleSchema = new mongoose.Schema(
   {
-    // judul: {
-    //   type: String,
-    //   required: true
-    // },
-    // deskripsi: {
-    //   type: String,
-    //   required: true
-    // }
     title: {
       type: String,
       required: true,
@@ -31,8 +23,12 @@ const articleSchema = new mongoose.Schema(
       required: false,
     },
     desa: {
-      type: [String],
+      type: String,
       required: true,
+    },
+    status: {
+      type: String,
+      required: true 
     }
   },
   {

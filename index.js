@@ -6,6 +6,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const process = require("process");
+const articleRoutes = require("./src/routes/ArticleRoutes");
 const app = express();
 
 // DOTENV CONFIG
@@ -94,6 +95,7 @@ app.get("/", (req, res) => {
       </html>
     `);
 });
+app.use("/article", articleRoutes)
 
 // NO ROUTE FOUND
 app.use((req, res, next) => {
