@@ -29,6 +29,10 @@ const articleSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true 
+    },
+    category: {
+      type: String,
+      required: true,
     }
   },
   {

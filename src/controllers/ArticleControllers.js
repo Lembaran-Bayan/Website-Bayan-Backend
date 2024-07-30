@@ -23,15 +23,21 @@ const upload = multer({ storage, limits: { fileSize: 1 * 1024 * 1024 } }).single
 exports.createArticle = async (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
+      console.error("Upload Error: ", err);
       return res.status(500).json({ error: err.message });
     }
 
-    // Check the file size
-    if (req.file.size > 1 * 1024 * 1024) { // 1MB limit
-      return res.status(400).json({ error: 'File size is too large. Maximum limit is 1MB.' });
+    // Check if the file was uploaded successfully
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded.' });
     }
 
-    const { title, paragraphs, writer, links, desa } = req.body;
+    // Check the file size
+    // if (req.file.size > 1 * 1024 * 1024) { // 1MB limit
+    //   return res.status(400).json({ error: 'File size is too large. Maximum limit is 1MB.' });
+    // }
+
+    const { title, paragraphs, writer, links, desa, category } = req.body;
     const image = req.file.id; // Store the file ID in the image field
 
     const newArticle = new Article({
@@ -41,6 +47,7 @@ exports.createArticle = async (req, res) => {
       writer,
       links,
       desa,
+      category,
       status: "Draft"
     });
 
@@ -52,6 +59,7 @@ exports.createArticle = async (req, res) => {
     }
   });
 };
+
 
 
 // Delete Article Endpoint
