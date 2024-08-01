@@ -101,14 +101,17 @@ exports.toggleArticleVerification = async (req, res) => {
     return res.status(404).json({ message: "Article not found" });
   }
   if (article.status === "Verified") {
-    return res.json({ message: "Article is already verified" });
+    article.status = "Draft";
+    await article.save();
+    return res.json({ message: "Article verification cancelled", article });
+  } else {
+    article.status = "Verified";
+    await article.save();
+    return res.json({
+      message: "Article verified successfully",
+      article
+    });
   }
-  article.status = "Verified";
-  await article.save();
-  return res.json({
-    message: "Article verified successfully",
-    article
-  });
 };
 
 // Get Article Endpoint
@@ -151,7 +154,7 @@ exports.getImage = async (req, res) => {
 };
 
 // Get All Articles
-exports.getAllArticle = async (req,res) => {
+exports.getAllArticle = async (req, res) => {
   const articles = await Article.find();
   console.log(articles);
   res.status(200).json(articles);
