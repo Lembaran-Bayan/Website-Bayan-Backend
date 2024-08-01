@@ -149,3 +149,10 @@ exports.getImage = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+// Get All Articles
+exports.getAllArticle = async (req,res) => {
+  const articles = await Article.find();
+  console.log(articles);
+  res.status(200).json(articles);
+}
