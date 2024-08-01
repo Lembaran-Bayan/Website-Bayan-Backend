@@ -94,7 +94,7 @@ exports.deleteArticle = async (req, res) => {
 };
 
 // Verify Article Endpoint
-exports.verifyArticle = async (req, res) => {
+exports.toggleArticleVerification = async (req, res) => {
   const { id } = req.params;
   const article = await Article.findById(id);
   if (!article) {
