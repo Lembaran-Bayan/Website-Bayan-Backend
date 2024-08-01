@@ -17,7 +17,7 @@ const storage = new GridFsStorage({
   }
 });
 
-const upload = multer({ storage, limits: { fileSize: 1 * 1024 * 1024 } }).single('image');
+const upload = multer({ storage }).single('image');
 
 // Create Article Endpoint
 exports.createArticle = async (req, res) => {
@@ -42,7 +42,7 @@ exports.createArticle = async (req, res) => {
 
     const newArticle = new Article({
       title,
-      paragraphs,
+      paragraphs: JSON.parse(paragraphs),
       image,
       writer,
       links,
