@@ -85,9 +85,8 @@ exports.deleteArticle = async (req, res) => {
       if (err) {
         return res.status(500).json({ message: "Error deleting image", error: err.message });
       }
-      return res.status(200).json({ message: "Article and image deleted successfully" });
     });
-
+    return res.status(200).json({ message: "Article and image deleted successfully" });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -156,6 +155,5 @@ exports.getImage = async (req, res) => {
 // Get All Articles
 exports.getAllArticle = async (req, res) => {
   const articles = await Article.find();
-  console.log(articles);
   res.status(200).json(articles);
 }
