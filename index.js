@@ -20,7 +20,7 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 
 // CORS
-app.use(cors({ origin: process.env.NODE_ENV !== "DEV" ? "https://www.lembaran-bayan.id" : "http://localhost:3000" }));
+app.use(cors());
 console.log(process.env.NODE_ENV !== "DEV" ? "https://www.lembaran-bayan.id" : "localhost:3000")
 
 // MONGODB CONNECTION
