@@ -141,6 +141,8 @@ exports.getImage = async (req, res) => {
       bucketName: 'uploads'
     });
     const readStream = gfsBucket.openDownloadStream(new mongoose.Types.ObjectId(id));
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Content-Type', 'image/jpeg');
 
     readStream.on('error', (err) => {
       return res.status(500).json({ message: "Error retrieving image", error: err.message });
